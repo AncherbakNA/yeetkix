@@ -27,7 +27,12 @@ jobs:
       - name: Verify Apple Silicon
         run: test "$(uname -m)" = arm64
       - name: Check fixture-only scenarios
-        run: swift run -c release -debug-info-format none LumaChecks
+        run: |
+          swift build -c release --jobs 2 --product LumaChecks -debug-info-format none
+          checks_bin="$(swift build -c release --show-bin-path)/LumaChecks"
+          codesign --force --sign - "$checks_bin"
+          codesign --verify --strict "$checks_bin"
+          "$checks_bin"
       - name: Build and package local app
         run: bash scripts/package-release.sh arm64
       - name: Verify package

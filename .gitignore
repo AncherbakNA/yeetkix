@@ -1,0 +1,16 @@
+.build/
+.build-*/
+.release-private/
+.swiftpm/
+build/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.p12
+*.p8
+*.key
+*.pem
+*.mobileprovision
+__pycache__/
+*.py[cod]

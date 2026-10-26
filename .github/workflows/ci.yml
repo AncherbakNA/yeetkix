@@ -1,0 +1,48 @@
+name: macOS ARM64
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-arm64-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-check:
+    name: ARM64 checks
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify Apple Silicon
+        run: test "$(uname -m)" = arm64
+      - name: Check fixture-only scenarios
+        run: swift run -c release -debug-info-format none LumaChecks
+      - name: Build and package local app
+        run: bash scripts/package-release.sh arm64
+      - name: Verify package
+        run: |
+          codesign --verify --deep --strict build/Yeetkix.app
+          test "$(lipo -archs build/Yeetkix.app/Contents/MacOS/Yeetkix)" = arm64
+          hdiutil verify build/Yeetkix-1.0-macOS-arm64.dmg
+          (cd build && shasum -a 256 -c Yeetkix-1.0-macOS-arm64.sha256)
+      - name: Save local build artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: YEETKIX-1.0-macOS-arm64
+          path: |
+            build/Yeetkix-1.0-macOS-arm64.zip
+            build/Yeetkix-1.0-macOS-arm64.dmg
+            build/Yeetkix-1.0-macOS-arm64.sha256
+          if-no-files-found: error
+          retention-days: 14

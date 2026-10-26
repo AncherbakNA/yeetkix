@@ -31,7 +31,16 @@ public enum ScanScope: String, Codable, CaseIterable, Identifiable, Sendable {
         let sandboxCaches = JunkCatalog.appCaches(applications).map { ScanRoot(relativePath: $0.relativePath, category: $0.category, home: home) }
         let tooling = JunkCatalog.toolCaches.map { ScanRoot(relativePath: $0.relativePath, category: .toolCaches, home: home) }
         switch self {
-        case .all: return [cache, logs, downloads] + large + Array(personal.suffix(2)) + remnants + developer + sandboxCaches + tooling + [trash]
+        case .all:
+            var roots = [cache, logs, downloads]
+            roots.append(contentsOf: large)
+            roots.append(contentsOf: personal.suffix(2))
+            roots.append(contentsOf: remnants)
+            roots.append(contentsOf: developer)
+            roots.append(contentsOf: sandboxCaches)
+            roots.append(contentsOf: tooling)
+            roots.append(trash)
+            return roots
         case .cleanup: return [cache, logs] + sandboxCaches + tooling
         case .downloads: return [downloads]
         case .large: return [downloads] + large
